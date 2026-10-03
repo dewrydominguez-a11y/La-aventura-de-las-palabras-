@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La aventura de las palabras | Teacher Dewry</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#e8f7ff,#fff4d6);color:#17324d}
+.container{max-width:850px;margin:auto;padding:20px}.hero{text-align:center;padding:25px 10px}
+.hero h1{font-size:clamp(2rem,7vw,4rem);margin:5px 0}.hero p{font-size:1.1rem}
+.card{background:#fff;border-radius:24px;padding:22px;box-shadow:0 10px 30px #00000018;margin:15px 0}
+.stats{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:bold}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:18px 0}
+.cell{min-height:60px;border:2px solid #dbe7ef;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:bold;background:#f8fbfd}
+.cell.current{background:#dff4ff;border-color:#4db7e8}.cell.done{background:#e7f8e9}
+.level{font-weight:bold;color:#39708f}.question{font-size:1.45rem;font-weight:bold;margin:10px 0 18px}
+.choices{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.choice,button{border:0;border-radius:14px;padding:15px;font-size:1.1rem;font-weight:bold;cursor:pointer}
+.choice{background:#eef5fa;border:2px solid #d5e3ec}.choice:hover{background:#dff4ff}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.primary{background:#3978ff;color:white}.secondary{background:#eef2f5;color:#17324d}
+.feedback{min-height:30px;margin-top:14px;font-weight:bold;font-size:1.1rem}
+.footer{text-align:center;padding:20px;color:#557}
+@media(max-width:480px){.container{padding:12px}.card{padding:16px}.choices{grid-template-columns:1fr}.cell{min-height:52px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header class="hero">
+<div style="font-size:3rem">🚀📚⭐</div>
+<h1>La aventura de las palabras</h1>
+<p>Un juego para aprender a leer jugando</p>
+<strong>Creado por Teacher Dewry</strong>
+</header>
+
+<main class="card">
+<div class="stats">
+<span>🏆 Puntos: <span id="score">0</span></span>
+<span>🚀 Progreso: <span id="progress">0/8</span></span>
+</div>
+<div class="board" id="board"></div>
+
+<div class="level" id="level"></div>
+<div class="question" id="question"></div>
+<div class="choices" id="choices"></div>
+<div class="feedback" id="feedback" aria-live="polite"></div>
+
+<div class="actions">
+<button class="primary" id="next">Siguiente reto →</button>
+<button class="secondary" id="reset">🔄 Reiniciar</button>
+</div>
+</main>
+
+<section class="card">
+<h2>🎯 ¿Qué practicamos?</h2>
+<p>Reconocimiento de letras, formación de sílabas, lectura de palabras y comprensión de frases sencillas.</p>
+</section>
+
+<footer class="footer">📚 La aventura de las palabras · Teacher Dewry</footer>
+</div>
+
+<script>
+const rounds=[
+{level:"Nivel 1 · Letras",q:"¿Qué letra comienza la palabra «sol»?",a:"S",c:["S","M","P","L"]},
+{level:"Nivel 1 · Letras",q:"¿Qué letra comienza la palabra «mesa»?",a:"M",c:["P","M","T","S"]},
+{level:"Nivel 2 · Sílabas",q:"Une M + A",a:"MA",c:["MA","ME","PA","SA"]},
+{level:"Nivel 2 · Sílabas",q:"Une P + O",a:"PO",c:["PA","PE","PI","PO"]},
+{level:"Nivel 3 · Palabras",q:"¿Cuál palabra se forma con MA + PA?",a:"MAPA",c:["MESA","MAPA","PATO","PALA"]},
+{level:"Nivel 3 · Palabras",q:"Lee: S - O - L",a:"SOL",c:["SAL","SOL","SIL","LOS"]},
+{level:"Nivel 4 · Frases",q:"Completa: «El ___ salta».",a:"GATO",c:["GATO","MESA","SOL","PAN"]},
+{level:"Nivel 4 · Frases",q:"Completa: «Mi mamá ___».",a:"AMA",c:["AMA","SOL","PATO","MESA"]}
+];
+
+let score=0,pos=0,current=0,answered=false;
+const $=id=>document.getElementById(id);
+
+function drawBoard(){
+ $("board").innerHTML="";
+ rounds.forEach((_,i)=>{
+   const d=document.createElement("div");
+   d.className="cell "+(i<pos?"done":i===pos?"current":"");
+   d.textContent=i<pos?"✓":i===7?"🏆":i+1;
+   $("board").appendChild(d);
+ });
+ $("progress").textContent=pos+"/8";
+}
+function render(){
+ const r=rounds[current];
+ answered=false;
+ $("level").textContent=r.level;
+ $("question").textContent=r.q;
+ $("feedback").textContent="";
+ $("choices").innerHTML="";
+ r.c.forEach(x=>{
+   const b=document.createElement("button");
+   b.className="choice";b.textContent=x;
+   b.onclick=()=>answer(x,b);
+   $("choices").appendChild(b);
+ });
+ drawBoard();
+}
+function answer(x,b){
+ if(answered)return;
+ if(x===rounds[current].a){
+   answered=true;score+=10;pos=Math.max(pos,current+1);
+   $("score").textContent=score;
+   $("feedback").textContent="🎉 ¡Excelente! ¡Muy bien!";
+   b.style.background="#dff6e4";
+   drawBoard();
+ }else{
+   $("feedback").textContent="💡 Inténtalo otra vez. Mira y escucha con atención.";
+   b.style.background="#ffe8e8";
+ }
+}
+$("next").onclick=()=>{
+ if(!answered){$("feedback").textContent="Primero selecciona la respuesta correcta.";return}
+ if(current<rounds.length-1){current++;render()}
+ else{$("question").textContent="🏆 ¡Misión completada!";$("level").textContent="¡Felicidades, lector!";$("choices").innerHTML="";$("feedback").textContent="Has conseguido "+score+" puntos. ¡Excelente trabajo!";drawBoard()}
+};
+$("reset").onclick=()=>{score=0;pos=0;current=0;render();$("score").textContent=0};
+render();
+</script>
+</body>
+</html>
